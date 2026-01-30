@@ -1,0 +1,86 @@
+To Run Task 2 => docker run -it -v "%cd%:/e2e" -w /e2e cypress/included:12.0.0
+To Run Task 3 => security check => pm.test("Security: Access denied without token", function () {
+    pm.response.to.have.status(401);
+});
+Data Integrity => pm.test("Status code is 200", () => { pm.response.to.have.status(200); });
+pm.test("Username is admin", () => { 
+    pm.expect(pm.response.json().username).to.eql("admin"); 
+});
+pm.test("Admin status is true", () => {
+    pm.expect(pm.response.json().is_admin).to.be.true;
+});
+
+post request test => 
+{
+  "title": "Postman_Milestone_01",
+  "description": "Created via API for SQE Task 3",
+  "state": "open"
+}
+
+
+
+pm.test("State Change: Milestone created successfully", function () {
+    pm.response.to.have.status(201);
+});
+
+To Run Task 4 =>docker run --rm -i grafana/k6 run - <perf_test.js => 4.1 =>import http from 'k6/http';
+import { sleep, check } from 'k6';
+
+export const options = {
+  vus: 20,           
+  duration: '30s',   
+  thresholds: {
+    // 95% of requests must stay under 500ms
+    http_req_duration: ['p(95)<500'], 
+  },
+};
+
+export default function () {
+  const baseUrl = 'http://host.docker.internal:3000';
+  
+  // 1. Test Homepage
+  const resHome = http.get(`${baseUrl}/`);
+  check(resHome, { 'Home status 200': (r) => r.status === 200 });
+
+  // 2. Test Explore Page (Public Module)
+  const resExplore = http.get(`${baseUrl}/explore/repos`);
+  check(resExplore, { 'Explore status 200': (r) => r.status === 200 });
+
+  sleep(1);
+} ,,, 4.2 (stress testing )=> import http from 'k6/http';
+import { sleep, check } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '30s', target: 50 },  // Ramp up to 50 users
+    { duration: '30s', target: 100 }, // Ramp up to 100 users
+    { duration: '30s', target: 200 }, // Ramp up to 200 users (Stress point)
+    { duration: '30s', target: 0 },   // Ramp down to 0 (Recovery)
+  ],
+  thresholds: {
+    // If more than 10% of requests fail, the test stops (System is broken)
+    http_req_failed: ['rate<0.10'], 
+    // If 95% of requests take longer than 1 second, the test fails
+    http_req_duration: ['p(95)<1000'], 
+  },
+};
+
+export default function () {
+  const baseUrl = 'http://host.docker.internal:3000';
+  
+  // We use a "Batch" request to simulate realistic heavy browser loading
+  const responses = http.batch([
+    ['GET', `${baseUrl}/`],
+    ['GET', `${baseUrl}/explore/repos`],
+  ]);
+
+  check(responses[0], { 'Home status 200': (r) => r.status === 200 });
+  check(responses[1], { 'Explore status 200': (r) => r.status === 200 });
+
+  sleep(1);
+} 
+Task 5 => 5.1 => docker run --rm -v C:\Users\PC\Downloads\SQE_PROJECT:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:3000 -r security_report.html 
+Task 6 => docker run --rm -v "%cd%:/usr/src" -e SONAR_HOST_URL="http://host.docker.internal:9000" -e SONAR_TOKEN="sqp_002104c44de242fb8294c6c0335113a19eeea010" sonarsource/sonar-scanner-cli -Dsonar.projectKey=Gitea-SQE
+
+
+docker run --rm -v "%cd%:/usr/src" -e SONAR_HOST_URL="http://host.docker.internal:9000" -e SONAR_TOKEN="sqp_002104c44de242fb8294c6c0335113a19eeea010" sonarsource/sonar-scanner-cli -Dsonar.projectKey=Gitea-SQE

@@ -1,0 +1,33 @@
+services:
+  server:
+    image: gitea/gitea:latest
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: always
+    networks:
+      - gitea
+    volumes:
+      - ./gitea-data:/data
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=gitea
+      - POSTGRES_DB=gitea
+    networks:
+      - gitea
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+
+networks:
+  gitea:
+    external: false
